@@ -2,6 +2,7 @@ from slimit.parser import Parser
 from slimit.visitors import nodevisitor
 from slimit import ast
 
+
 class JavaScriptIfEvaluator:
     def __init__(self, formula):
         self.formula = formula
@@ -25,6 +26,7 @@ class JavaScriptIfEvaluator:
 
         except Exception as e:
             return f"Error: {str(e)}"
+
 
 # Example usage:
 if_formula = 'if (a > 10) { "High" } else { "Low" }'
