@@ -1,21 +1,19 @@
-# input_window.py
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QPushButton
-from ResultWindow import ResultWindow  # 引入 result_window 子窗口
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTextEdit, QPushButton, QWidget, QScrollArea, \
+    QSizePolicy
 
 
-class InputWindow(QWidget):
-    def __init__(self, result_window):
+class FormulaEvaluatorApp(QMainWindow):
+    def __init__(self):
         super().__init__()
-        self.result_window = result_window
         self.init_ui()
 
     def init_ui(self):
         self.setWindowTitle('公式计算器')
-        self.setGeometry(0, 0, 800, 600)
-        self.center()
+        self.setGeometry(100, 100, 450, 360)
 
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
         main_layout = QVBoxLayout()
 
         # 上部分：输入if公式
@@ -30,25 +28,31 @@ class InputWindow(QWidget):
 
         # 提交按钮
         submit_button = QPushButton('提交')
-        submit_button.clicked.connect(self.submit_data)
+        submit_button.clicked.connect(self.calculate_formula)
         main_layout.addWidget(submit_button)
 
-        self.setLayout(main_layout)
+        # 底部：显示替换后的公式和结果
+        self.result_display = QTextEdit()
+        self.result_display.setPlaceholderText('这里显示替换后的if公式和结果')
+        self.result_display.setReadOnly(True)
+        self.result_display.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        self.result_scroll_area = QScrollArea()
+        self.result_scroll_area.setWidget(self.result_display)
+        self.result_scroll_area.setWidgetResizable(True)
+        self.result_scroll_area.hide()
+        main_layout.addWidget(self.result_scroll_area)
 
-    def center(self):
-        # 屏幕居中
-        frame_geometry = self.frameGeometry()
-        center_point = QApplication.desktop().screenGeometry().center()
-        frame_geometry.moveCenter(center_point)
-        self.move(frame_geometry.topLeft())
+        main_widget.setLayout(main_layout)
 
-    def submit_data(self):
-        # 获取输入的if公式和变量替换值
+    def calculate_formula(self):
         formula = self.formula_input.toPlainText()
         variable_values = self.variables_input.toPlainText()
-        self.result_window.process_data(formula, variable_values)
-
-    def closeEvent(self, event):
-        # 关闭主窗口时一起关闭子窗口
-        self.result_window.close()
-        event.accept()
+        variables = {}
+        try:
+            exec(variable_values, variables)
+            result = eval(formula, variables)
+            self.result_display.append(f'替换后的公式: {formula}')
+            self.result_display.append(f'计算结果: {result}')
+            self.result_scroll_area.show()  # 显示底部展示框
+        except Exception as e:
+            self.result_display.append(f'计算出错: {str(e)}')
